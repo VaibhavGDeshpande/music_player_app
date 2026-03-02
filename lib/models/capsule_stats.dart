@@ -1,3 +1,36 @@
+class CapsuleMonth {
+  final int month;
+  final int year;
+  final String label;
+
+  const CapsuleMonth({
+    required this.month,
+    required this.year,
+    required this.label,
+  });
+
+  factory CapsuleMonth.fromJson(Map<String, dynamic> json) {
+    final month = (json['month'] as num?)?.toInt() ?? DateTime.now().month;
+    final year = (json['year'] as num?)?.toInt() ?? DateTime.now().year;
+    final label = (json['label'] as String?)?.trim();
+
+    return CapsuleMonth(
+      month: month,
+      year: year,
+      label: (label == null || label.isEmpty) ? '$month/$year' : label,
+    );
+  }
+
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) return true;
+    return other is CapsuleMonth && other.month == month && other.year == year;
+  }
+
+  @override
+  int get hashCode => Object.hash(month, year);
+}
+
 class CapsuleTrack {
   final int count;
   final String name;
@@ -57,9 +90,9 @@ class CapsuleStats {
 
     final totalPlays = json['total_plays'] ?? 0;
 
-    // Calculate synthetic fields for existing UI elements
     // In a real scenario, the API would also return minutes listened and top artist separately
-    final timeListenedMinutes = json['total_minutes']; // Estimate: 3 min per play
+    final timeListenedMinutes =
+        json['total_minutes']; // Estimate: 3 min per play
 
     String topSongName = tracks.isNotEmpty ? tracks.first.name : 'Unknown';
     String topSongImage = tracks.isNotEmpty ? tracks.first.image : '';

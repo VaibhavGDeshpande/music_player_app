@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:cached_network_image/cached_network_image.dart';
+import '../../models/capsule_stats.dart';
 import '../../providers/capsule_provider.dart';
 
 class SoundCapsuleScreen extends ConsumerWidget {
@@ -9,6 +10,8 @@ class SoundCapsuleScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final capsuleAsync = ref.watch(capsuleStatsProvider);
+    final monthsAsync = ref.watch(availableCapsuleMonthsProvider);
+    final selectedMonth = ref.watch(selectedCapsuleMonthProvider);
 
     return Scaffold(
       backgroundColor: const Color(0xFF121212),
@@ -39,32 +42,14 @@ class SoundCapsuleScreen extends ConsumerWidget {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Row(
-                      children: const [
-                        Text(
-                          'February ',
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontSize: 22,
-                            fontWeight: FontWeight.bold,
-                          ),
-                          textAlign: null,
-                        ),
-                        Text(
-                          '2026',
-                          style: TextStyle(
-                            color: Colors.white54,
-                            fontSize: 22,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                        SizedBox(width: 8),
-                        Icon(
-                          Icons.help_outline,
-                          color: Colors.white54,
-                          size: 20,
-                        ),
-                      ],
+                    _MonthSelector(
+                      monthsAsync: monthsAsync,
+                      selectedMonth: selectedMonth,
+                      onChanged: (month) {
+                        ref
+                            .read(selectedCapsuleMonthProvider.notifier)
+                            .select(month);
+                      },
                     ),
                     const Icon(Icons.share, color: Colors.white, size: 24),
                   ],
@@ -476,6 +461,83 @@ class SoundCapsuleScreen extends ConsumerWidget {
             'Error loading capsule data',
             style: const TextStyle(color: Colors.white54),
           ),
+        ),
+      ),
+    );
+  }
+}
+
+class _MonthSelector extends StatelessWidget {
+  const _MonthSelector({
+    required this.monthsAsync,
+    required this.selectedMonth,
+    required this.onChanged,
+  });
+
+  final AsyncValue<List<CapsuleMonth>> monthsAsync;
+  final CapsuleMonth? selectedMonth;
+  final ValueChanged<CapsuleMonth?> onChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    return monthsAsync.when(
+      data: (months) {
+        if (months.isEmpty) {
+          return const Text(
+            'Current Month',
+            style: TextStyle(
+              color: Colors.white,
+              fontSize: 22,
+              fontWeight: FontWeight.bold,
+            ),
+          );
+        }
+
+        final current = selectedMonth ?? months.first;
+
+        return DropdownButtonHideUnderline(
+          child: DropdownButton<CapsuleMonth>(
+            value: months.contains(current) ? current : months.first,
+            dropdownColor: const Color(0xFF2A2A2A),
+            icon: const Icon(Icons.keyboard_arrow_down, color: Colors.white70),
+            style: const TextStyle(
+              color: Colors.white,
+              fontSize: 22,
+              fontWeight: FontWeight.bold,
+            ),
+            items: months
+                .map(
+                  (month) => DropdownMenuItem<CapsuleMonth>(
+                    value: month,
+                    child: Text(
+                      month.label,
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 22,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                )
+                .toList(),
+            onChanged: onChanged,
+          ),
+        );
+      },
+      loading: () => const SizedBox(
+        height: 28,
+        width: 28,
+        child: CircularProgressIndicator(
+          strokeWidth: 2,
+          color: Color(0xFF1DB954),
+        ),
+      ),
+      error: (_, _) => const Text(
+        'Current Month',
+        style: TextStyle(
+          color: Colors.white,
+          fontSize: 22,
+          fontWeight: FontWeight.bold,
         ),
       ),
     );
