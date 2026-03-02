@@ -2,11 +2,17 @@ import 'package:dio/dio.dart';
 import '../models/lyric_line.dart';
 
 class LyricsService {
+  static final Dio _dio = Dio(
+    BaseOptions(
+      connectTimeout: const Duration(seconds: 8),
+      receiveTimeout: const Duration(seconds: 8),
+      responseType: ResponseType.json,
+    ),
+  );
+
   Future<List<LyricLine>> getLyrics(String trackId) async {
     try {
-      // Create a fresh Dio instance to avoid the base URL interceptors from ApiClient
-      final dio = Dio();
-      final response = await dio.get(
+      final response = await _dio.get(
         'https://spotify-lyrics-topaz.vercel.app/',
         queryParameters: {'trackid': trackId},
       );
